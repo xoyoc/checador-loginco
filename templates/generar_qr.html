@@ -1,0 +1,117 @@
+
+<!-- generar_qr.html -->
+{% extends 'base.html' %}
+
+{% block title %}Generar Códigos QR{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-qrcode"></i> Generar Códigos QR para Empleados</h4>
+            </div>
+            <div class="card-body">
+                <form id="qrForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Empleado</label>
+                                <select name="empleado_id" class="form-select" required>
+                                    <option value="">Seleccionar empleado...</option>
+                                    {% for empleado in empleados %}
+                                        <option value="{{ empleado.id }}">{{ empleado.user }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Registro</label>
+                                <select name="tipo" class="form-select" required>
+                                    <option value="entrada">Entrada</option>
+                                    <option value="salida">Salida</option>
+                                    <option value="comida_salida">Salida a Comida</option>
+                                    <option value="comida_entrada">Regreso de Comida</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-qrcode"></i> Generar QR
+                    </button>
+                </form>
+
+                <div id="qrResult" class="qr-code-container" style="display: none;">
+                    <div id="qrImage"></div>
+                    <p class="mt-3">Código: <strong id="qrCode"></strong></p>
+                    <button class="btn btn-success" onclick="descargarQR()">
+                        <i class="fas fa-download"></i> Descargar QR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR para Visitas -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4><i class="fas fa-user-plus"></i> Código QR para Registro de Visitas</h4>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-info" onclick="generarQRVisita()">
+                    <i class="fas fa-qrcode"></i> Generar QR para Visitas
+                </button>
+                <div id="qrVisitaResult" class="qr-code-container" style="display: none;">
+                    <div id="qrVisitaImage"></div>
+                    <p class="mt-3">Mostrar este QR a las visitas para que registren su llegada</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('qrForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{% url "generar_qr_empleado" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('qrImage').innerHTML = `<img src="${data.qr_code}" alt="Código QR">`;
+        document.getElementById('qrCode').textContent = data.codigo;
+        document.getElementById('qrResult').style.display = 'block';
+        
+        // Guardar para descarga
+        window.currentQR = data.qr_code;
+    });
+});
+
+function generarQRVisita() {
+    fetch('{% url "generar_qr_visita" %}')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('qrVisitaImage').innerHTML = `<img src="${data.qr_code}" alt="QR Visitas">`;
+        document.getElementById('qrVisitaResult').style.display = 'block';
+    });
+}
+
+function descargarQR() {
+    if (window.currentQR) {
+        const link = document.createElement('a');
+        link.download = 'codigo_qr.png';
+        link.href = window.currentQR;
+        link.click();
+    }
+}
+</script>
+{% endblock %}

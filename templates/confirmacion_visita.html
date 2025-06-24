@@ -1,0 +1,42 @@
+<!-- confirmacion_visita.html -->
+{% extends 'base.html' %}
+
+{% block title %}Visita Registrada{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h2 class="text-success">¡Visita Registrada Exitosamente!</h2>
+                
+                <div class="mt-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5>Detalles de la Visita:</h5>
+                            <p><strong>Nombre:</strong> {{ visita.nombre }}</p>
+                            {% if visita.empresa %}
+                                <p><strong>Empresa:</strong> {{ visita.empresa }}</p>
+                            {% endif %}
+                            <p><strong>Persona a Visitar:</strong> {{ visita.persona_a_visitar }}</p>
+                            <p><strong>Fecha y Hora:</strong> {{ visita.fecha_hora_llegada|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-muted">
+                        Por favor, espere a que lo contacten o diríjase al área de recepción.
+                    </p>
+                    <a href="{% url 'formulario_visita' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Registrar Otra Visita
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

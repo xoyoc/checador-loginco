@@ -1,0 +1,92 @@
+
+<!-- dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Control de Acceso{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2><i class="fas fa-tachometer-alt"></i> Dashboard - {{ fecha_hoy }}</h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5><i class="fas fa-users"></i> Empleados Presentes</h5>
+                <h3>{{ empleados_presentes|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5><i class="fas fa-clock"></i> Registros Hoy</h5>
+                <h3>{{ total_registros }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5><i class="fas fa-qrcode"></i> Accesos Rápidos</h5>
+                <a href="{% url 'generar_qr_empleado' %}" class="btn btn-primary me-2">
+                    <i class="fas fa-qrcode"></i> Generar QR
+                </a>
+                <a href="{% url 'scanner_empleado' %}" class="btn btn-success me-2">
+                    <i class="fas fa-camera"></i> Escáner
+                </a>
+                <a href="{% url 'formulario_visita' %}" class="btn btn-info">
+                    <i class="fas fa-user-plus"></i> Registro Visitas
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Empleados Presentes</h5>
+            </div>
+            <div class="card-body">
+                {% for empleado in empleados_presentes %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ empleado.user.get_full_name }}</span>
+                        <span class="badge bg-success">Presente</span>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">No hay empleados presentes</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Últimos Registros</h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% for registro in registros_hoy %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ registro.empleado.user.get_full_name }}</strong><br>
+                            <small class="text-muted">{{ registro.get_tipo_registro_display }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-secondary">{{ registro.fecha_hora|time }}</span>
+                        </div>
+                    </div>
+                    <hr>
+                {% empty %}
+                    <p class="text-muted">No hay registros hoy</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

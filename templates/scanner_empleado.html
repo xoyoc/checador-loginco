@@ -1,0 +1,114 @@
+<!-- scanner_empleado.html -->
+{% extends 'base.html' %}
+
+{% block title %}Escáner QR Empleados{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-camera"></i> Escáner de Códigos QR</h4>
+            </div>
+            <div class="card-body">
+                <div class="scanner-container">
+                    <div id="reader" style="width: 100%;"></div>
+                    <button id="startScanner" class="btn btn-primary mt-3">
+                        <i class="fas fa-camera"></i> Iniciar Escáner
+                    </button>
+                    <button id="stopScanner" class="btn btn-danger mt-3" style="display: none;">
+                        <i class="fas fa-stop"></i> Detener Escáner
+                    </button>
+                </div>
+
+                <div id="resultado" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let html5QrcodeScanner = null;
+
+document.getElementById('startScanner').addEventListener('click', function() {
+    startScanner();
+    this.style.display = 'none';
+    document.getElementById('stopScanner').style.display = 'block';
+});
+
+document.getElementById('stopScanner').addEventListener('click', function() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+    }
+    this.style.display = 'none';
+    document.getElementById('startScanner').style.display = 'block';
+});
+
+function startScanner() {
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { fps: 10, qrbox: {width: 250, height: 250} }
+    );
+    
+    html5QrcodeScanner.render(onScanSuccess, onScanError);
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    // Procesar el código QR escaneado
+    fetch('{% url "scanner_empleado" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            codigo_qr: decodedText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('resultado').innerHTML = `
+                <div class="registro-exitoso">
+                    <h5><i class="fas fa-check-circle"></i> ¡Registro Exitoso!</h5>
+                    <p><strong>Empleado:</strong> ${data.empleado}</p>
+                    <p><strong>Tipo:</strong> ${data.tipo}</p>
+                    <p><strong>Hora:</strong> ${data.hora}</p>
+                </div>
+            `;
+            document.getElementById('resultado').style.display = 'block';
+            
+            // Detener escáner después de un registro exitoso
+            setTimeout(() => {
+                document.getElementById('stopScanner').click();
+            }, 2000);
+        } else {
+            document.getElementById('resultado').innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Error</h5>
+                    <p>${data.error}</p>
+                </div>
+            `;
+            document.getElementById('resultado').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('resultado').innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-exclamation-triangle"></i> Error de Conexión</h5>
+                <p>No se pudo procesar el código QR</p>
+            </div>
+        `;
+        document.getElementById('resultado').style.display = 'block';
+    });
+}
+
+function onScanError(error) {
+    // Manejar errores de escaneo (opcional)
+    console.warn(`Error de escaneo: ${error}`);
+}
+</script>
+{% endblock %}
